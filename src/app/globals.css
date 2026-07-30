@@ -1,26 +1,65 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --cream: #fdfbf7;
+  --canvas: #f4f1ea;
+  --ink: #1a1a1a;
+  --accent: #e35335;
+  --accent-hover: #c94428;
+  --muted: #6b6560;
+  --white: #ffffff;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-cream: var(--cream);
+  --color-canvas: var(--canvas);
+  --color-ink: var(--ink);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-muted: var(--muted);
+  --color-white: var(--white);
+  --font-sans: var(--font-display);
+  --font-mono: var(--font-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-radius: 0 !important;
+}
+
+html,
+body {
+  height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--font-display), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--cream);
+}
+
+/* Hard offset shadow utility (brutalist) */
+.shadow-hard {
+  box-shadow: 4px 4px 0 0 #1a1a1a;
+}
+
+.shadow-hard-sm {
+  box-shadow: 2px 2px 0 0 #1a1a1a;
+}
+
+.shadow-hard-lg {
+  box-shadow: 6px 6px 0 0 #1a1a1a;
+}
+
+/* Hairline grid backdrop for auth / empty states */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(26, 26, 26, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(26, 26, 26, 0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
 }

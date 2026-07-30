@@ -1,23 +1,29 @@
 # Settl Web
 
-Frontend application built with Next.js.
+Retro-brutalist frontend for Settl (Chroma-inspired: cream canvas, ink borders, burnt amber accent).
 
-## Quick Start
+## Run locally
 
 ```bash
+cp .env.local.example .env.local
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the app.
+App: [http://localhost:3001](http://localhost:3001)  
+API (separate repo): `http://localhost:3000` — enable CORS for `:3001` (see settl-api `main.ts` / `CORS_ORIGINS`).
 
-## Tech Stack
+## Phase 1 (this build)
 
-- **Framework:** Next.js v16.2.9
-- **Language:** TypeScript
-- **Styling:** CSS
+- Landing, login, register
+- Auth session (JWT in localStorage)
+- App shell (sidebar / mobile top nav)
+- Groups dashboard: list, create, join by code
+- Minimal group detail placeholder (no expenses yet)
 
-## Project Structure
+## Stack
 
-- `src/app/` - Next.js App Router pages and components
-- `public/` - Static assets
+- Next.js 16 (App Router) + React 19
+- Tailwind CSS 4
+- motion/react
+- Archivo (UI) + IBM Plex Mono (data)
