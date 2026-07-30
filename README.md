@@ -13,13 +13,11 @@ npm run dev
 App: [http://localhost:3001](http://localhost:3001)  
 API (separate repo): `http://localhost:3000` — enable CORS for `:3001` (see settl-api `main.ts` / `CORS_ORIGINS`).
 
-## Phase 1 (this build)
+## Phases
 
-- Landing, login, register
-- Auth session (JWT in localStorage)
-- App shell (sidebar / mobile top nav)
-- Groups dashboard: list, create, join by code
-- Minimal group detail placeholder (no expenses yet)
+**Phase 1** — Landing, auth, app shell, groups list (create / join)
+
+**Phase 2** — Group detail: Expenses + Members tabs, add expense (equal split), add/kick members, invite copy/rotate
 
 ## Stack
 

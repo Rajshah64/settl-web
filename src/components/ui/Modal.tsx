@@ -9,9 +9,10 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: ReactNode;
+  wide?: boolean;
 }
 
-export function Modal({ open, onClose, title, children }: ModalProps) {
+export function Modal({ open, onClose, title, children, wide }: ModalProps) {
   return (
     <AnimatePresence>
       {open ? (
@@ -35,7 +36,9 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
             initial="hidden"
             animate="show"
             exit="exit"
-            className="relative z-10 w-full max-w-md border-2 border-ink bg-cream shadow-hard-lg"
+            className={`relative z-10 w-full border-2 border-ink bg-cream shadow-hard-lg ${
+              wide ? "max-w-lg" : "max-w-md"
+            }`}
           >
             <div className="flex items-center justify-between border-b-2 border-ink bg-canvas px-4 py-3">
               <h3
