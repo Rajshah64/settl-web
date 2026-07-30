@@ -1,7 +1,12 @@
 import type { ApiErrorBody } from "./types";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
+function resolveApiBase(): string {
+  const raw = process.env.NEXT_PUBLIC_API_URL?.trim();
+  const base = raw && raw.length > 0 ? raw.replace(/\/$/, "") : "http://localhost:3000";
+  return base;
+}
+
+const API_BASE = resolveApiBase();
 
 export class ApiError extends Error {
   status: number;

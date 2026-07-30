@@ -17,7 +17,9 @@ API (separate repo): `http://localhost:3000` — enable CORS for `:3001` (see se
 
 **Phase 1** — Landing, auth, app shell, groups list (create / join)
 
-**Phase 2** — Group detail: Expenses + Members tabs, add expense (equal split), add/kick members, invite copy/rotate
+**Phase 2** — Group detail: Expenses + Members + Balances tabs, equal-split create, invite copy/rotate
+
+**Phase 2b** — Derived group balances + suggested settle-up (`GET /groups/:id/balances`)
 
 ## Stack
 

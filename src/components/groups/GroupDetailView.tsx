@@ -8,6 +8,7 @@ import { AddMemberModal } from "@/components/groups/AddMemberModal";
 import { MemberList } from "@/components/groups/MemberList";
 import { CreateExpenseModal } from "@/components/expenses/CreateExpenseModal";
 import { ExpenseList } from "@/components/expenses/ExpenseList";
+import { BalancesPanel } from "@/components/balances/BalancesPanel";
 import { Button } from "@/components/ui/Button";
 import { Tabs } from "@/components/ui/Tabs";
 import { ApiError } from "@/lib/api/client";
@@ -18,7 +19,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import type { Expense, Group, GroupMember } from "@/lib/api/types";
 import { snapSpring } from "@/lib/motion";
 
-type TabId = "expenses" | "members";
+type TabId = "expenses" | "balances" | "members";
 
 export function GroupDetailView() {
   const params = useParams<{ id: string }>();
@@ -30,6 +31,7 @@ export function GroupDetailView() {
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [expenseTotal, setExpenseTotal] = useState(0);
+  const [balancesKey, setBalancesKey] = useState(0);
   const [tab, setTab] = useState<TabId>("expenses");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -226,6 +228,7 @@ export function GroupDetailView() {
           onChange={(id) => setTab(id as TabId)}
           tabs={[
             { id: "expenses", label: "Expenses", count: expenseTotal },
+            { id: "balances", label: "Balances" },
             { id: "members", label: "Members", count: members.length },
           ]}
         />
@@ -247,6 +250,16 @@ export function GroupDetailView() {
                   </Button>
                 </div>
                 <ExpenseList expenses={expenses} />
+              </motion.div>
+            ) : tab === "balances" ? (
+              <motion.div
+                key="balances"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={snapSpring}
+              >
+                <BalancesPanel groupId={groupId} refreshKey={balancesKey} />
               </motion.div>
             ) : (
               <motion.div
@@ -286,6 +299,7 @@ export function GroupDetailView() {
         onCreated={(expense) => {
           setExpenses((prev) => [expense, ...prev]);
           setExpenseTotal((t) => t + 1);
+          setBalancesKey((k) => k + 1);
         }}
       />
     </div>

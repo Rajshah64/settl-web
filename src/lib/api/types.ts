@@ -78,3 +78,19 @@ export interface ApiErrorBody {
   message?: string | string[];
   error?: string;
 }
+
+export interface NetBalance {
+  user: UserSummary;
+  netPaise: number;
+}
+
+export interface SuggestedSettlement {
+  from: UserSummary;
+  to: UserSummary;
+  amountPaise: number;
+}
+
+export interface GroupBalances {
+  balances: NetBalance[];
+  settlements: SuggestedSettlement[];
+}

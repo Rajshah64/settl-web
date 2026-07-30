@@ -43,7 +43,7 @@ export default function ProfilePage() {
         variant="danger"
         onClick={() => {
           logout();
-          router.replace("/login");
+          router.replace("/");
         }}
       >
         Log out

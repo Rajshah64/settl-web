@@ -19,7 +19,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const handleLogout = () => {
     logout();
-    router.replace("/login");
+    router.replace("/");
   };
 
   return (
