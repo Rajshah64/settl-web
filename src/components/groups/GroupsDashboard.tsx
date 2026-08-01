@@ -7,23 +7,33 @@ import { CreateGroupModal } from "@/components/groups/CreateGroupModal";
 import { GroupCard } from "@/components/groups/GroupCard";
 import { JoinGroupModal } from "@/components/groups/JoinGroupModal";
 import { ApiError } from "@/lib/api/client";
-import { listMyGroups } from "@/lib/api/groups";
+import {
+  listArchivedGroups,
+  listMyGroups,
+  restoreGroup,
+} from "@/lib/api/groups";
 import type { Group } from "@/lib/api/types";
 import { snapSpring, staggerContainer } from "@/lib/motion";
 
 export function GroupsDashboard() {
   const [groups, setGroups] = useState<Group[]>([]);
+  const [archived, setArchived] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
+  const [restoringId, setRestoringId] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await listMyGroups();
-      setGroups(data);
+      const [active, archivedList] = await Promise.all([
+        listMyGroups(),
+        listArchivedGroups(),
+      ]);
+      setGroups(active);
+      setArchived(archivedList);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to load groups");
     } finally {
@@ -40,6 +50,20 @@ export function GroupsDashboard() {
       const without = prev.filter((g) => g.id !== group.id);
       return [group, ...without];
     });
+  }
+
+  async function handleRestore(group: Group) {
+    setRestoringId(group.id);
+    setError(null);
+    try {
+      const restored = await restoreGroup(group.id);
+      setArchived((prev) => prev.filter((g) => g.id !== group.id));
+      upsertGroup(restored);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not restore group");
+    } finally {
+      setRestoringId(null);
+    }
   }
 
   return (
@@ -92,8 +116,7 @@ export function GroupsDashboard() {
             No groups yet
           </h2>
           <p className="text-sm text-muted max-w-sm mx-auto">
-            Create a group for a trip, flat, or dinner crew — or join with a
-            6-digit invite code.
+            Create a group, or join via a short link / QR / 6-digit code.
           </p>
           <div className="flex justify-center gap-2 pt-2">
             <Button variant="secondary" onClick={() => setJoinOpen(true)}>
@@ -117,6 +140,39 @@ export function GroupsDashboard() {
             ))}
           </AnimatePresence>
         </motion.div>
+      ) : null}
+
+      {!loading && !error && archived.length > 0 ? (
+        <section className="space-y-3 pt-4 border-t-2 border-ink">
+          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
+            Archived // restore
+          </p>
+          <ul className="border-2 border-ink divide-y-2 divide-ink bg-canvas shadow-hard">
+            {archived.map((g) => (
+              <li
+                key={g.id}
+                className="px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold uppercase tracking-tight truncate">
+                    {g.name}
+                  </p>
+                  <p className="font-mono text-[10px] text-muted">
+                    Code {g.inviteCode}
+                  </p>
+                </div>
+                <Button
+                  variant="secondary"
+                  className="!text-xs !py-2"
+                  loading={restoringId === g.id}
+                  onClick={() => void handleRestore(g)}
+                >
+                  Restore
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : null}
 
       <CreateGroupModal

@@ -47,7 +47,7 @@ export function JoinGroupModal({ open, onClose, onJoined }: Props) {
           value={code}
           onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
           placeholder="123456"
-          hint="6-digit code from a group admin"
+          hint="6-digit code — or open a short link /j/123456 from a QR"
         />
         {error ? (
           <p className="font-mono text-xs text-accent border-2 border-ink bg-canvas px-2 py-1.5">

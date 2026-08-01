@@ -21,9 +21,11 @@ API (separate repo): `http://localhost:3000` — enable CORS for `:3001` (see se
 
 **Phase 2b** — Derived group balances + suggested settle-up (`GET /groups/:id/balances`)
 
-**Phase 3** — Record settlements (`POST/GET/DELETE /groups/:id/settlements`) + mark-as-paid on balances tab
+**Phase 3** — Record settlements + mark-as-paid; UPI pay links when payee has VPA
 
-**Account / expenses** — Profile edit + change password; expense edit/delete on group detail
+**Account / expenses** — Profile (name, UPI ID, password); expense edit/delete
+
+**Groups** — Edit / archive / restore / transfer; short join links `/j/[code]` + QR
 
 ## Stack
 

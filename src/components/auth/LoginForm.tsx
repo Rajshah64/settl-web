@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Button } from "@/components/ui/Button";
@@ -11,9 +11,17 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { ApiError } from "@/lib/api/client";
 import { panelEnter, snapSpring } from "@/lib/motion";
 
+function safeNextPath(raw: string | null): string {
+  if (!raw) return "/groups";
+  if (!raw.startsWith("/") || raw.startsWith("//")) return "/groups";
+  return raw;
+}
+
 export function LoginForm() {
   const { login } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = safeNextPath(searchParams.get("next"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +33,7 @@ export function LoginForm() {
     setLoading(true);
     try {
       await login(email.trim(), password);
-      router.replace("/groups");
+      router.replace(next);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Login failed");
     } finally {
@@ -83,7 +91,11 @@ export function LoginForm() {
       >
         No account?{" "}
         <Link
-          href="/register"
+          href={
+            next !== "/groups"
+              ? `/register?next=${encodeURIComponent(next)}`
+              : "/register"
+          }
           className="text-ink font-bold underline underline-offset-2 decoration-2 hover:text-accent"
         >
           Register

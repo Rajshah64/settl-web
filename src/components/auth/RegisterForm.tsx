@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Button } from "@/components/ui/Button";
@@ -11,9 +11,17 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { ApiError } from "@/lib/api/client";
 import { panelEnter, snapSpring } from "@/lib/motion";
 
+function safeNextPath(raw: string | null): string {
+  if (!raw) return "/groups";
+  if (!raw.startsWith("/") || raw.startsWith("//")) return "/groups";
+  return raw;
+}
+
 export function RegisterForm() {
   const { register } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = safeNextPath(searchParams.get("next"));
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -32,7 +40,7 @@ export function RegisterForm() {
         email: email.trim(),
         password,
       });
-      router.replace("/groups");
+      router.replace(next);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Registration failed");
     } finally {
@@ -104,7 +112,11 @@ export function RegisterForm() {
       >
         Already in?{" "}
         <Link
-          href="/login"
+          href={
+            next !== "/groups"
+              ? `/login?next=${encodeURIComponent(next)}`
+              : "/login"
+          }
           className="text-ink font-bold underline underline-offset-2 decoration-2 hover:text-accent"
         >
           Sign in

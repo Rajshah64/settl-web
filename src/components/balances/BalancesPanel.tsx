@@ -14,6 +14,7 @@ import type { GroupBalances, Settlement, SuggestedSettlement } from "@/lib/api/t
 import { displayName, formatINR, initials } from "@/lib/format";
 import { snapSpring, staggerContainer, staggerItem } from "@/lib/motion";
 import { useAuth } from "@/lib/auth/auth-context";
+import { upiPayHref } from "@/lib/upi";
 
 interface Props {
   groupId: number;
@@ -243,6 +244,12 @@ export function BalancesPanel({
             {data.settlements.map((s, i) => {
               const key = suggestionKey(s, i);
               const markable = canMarkPaid(s);
+              const upiHref = upiPayHref({
+                to: s.to,
+                amountPaise: s.amountPaise,
+                note: "Settl settle-up",
+              });
+              const showUpi = Boolean(upiHref && user?.id === s.from.id);
               return (
                 <motion.li
                   key={key}
@@ -260,27 +267,38 @@ export function BalancesPanel({
                   <p className="font-mono text-base font-bold tabular-nums">
                     {formatINR(s.amountPaise)}
                   </p>
-                  {markable ? (
-                    <Button
-                      variant="secondary"
-                      className="sm:ml-2 shrink-0 text-xs py-2 px-3"
-                      loading={payingKey === key}
-                      onClick={() => void handleMarkPaid(s, i)}
-                    >
-                      Mark paid
-                    </Button>
-                  ) : (
-                    <span className="font-mono text-[10px] text-muted uppercase tracking-wider sm:w-24 text-right">
-                      Party only
-                    </span>
-                  )}
+                  <div className="flex flex-wrap gap-2 sm:ml-2 shrink-0">
+                    {showUpi && upiHref ? (
+                      <a
+                        href={upiHref}
+                        className="inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold uppercase tracking-wide bg-canvas text-ink border-2 border-ink shadow-hard hover:bg-ink hover:text-cream"
+                      >
+                        Pay UPI
+                      </a>
+                    ) : null}
+                    {markable ? (
+                      <Button
+                        variant="secondary"
+                        className="text-xs py-2 px-3"
+                        loading={payingKey === key}
+                        onClick={() => void handleMarkPaid(s, i)}
+                      >
+                        Mark paid
+                      </Button>
+                    ) : !showUpi ? (
+                      <span className="font-mono text-[10px] text-muted uppercase tracking-wider self-center">
+                        Party only
+                      </span>
+                    ) : null}
+                  </div>
                 </motion.li>
               );
             })}
           </motion.ul>
         )}
         <p className="font-mono text-[10px] text-muted uppercase tracking-wider">
-          Mark paid records a settlement and updates nets
+          Pay UPI opens your UPI app when the payee has a VPA on their profile.
+          Mark paid records the settlement after you pay.
         </p>
       </section>
 

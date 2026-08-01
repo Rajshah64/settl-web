@@ -10,6 +10,7 @@ export interface UserProfile {
   firstName: string;
   lastName: string;
   email: string;
+  upiId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -19,6 +20,7 @@ export interface UserSummary {
   firstName: string;
   lastName: string;
   email: string;
+  upiId?: string | null;
 }
 
 export interface GroupMember {

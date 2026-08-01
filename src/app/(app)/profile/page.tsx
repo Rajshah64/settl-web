@@ -17,6 +17,7 @@ export default function ProfilePage() {
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [upiId, setUpiId] = useState("");
   const [profileError, setProfileError] = useState<string | null>(null);
   const [profileOk, setProfileOk] = useState<string | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
@@ -32,6 +33,7 @@ export default function ProfilePage() {
     if (!profile) return;
     setFirstName(profile.firstName);
     setLastName(profile.lastName);
+    setUpiId(profile.upiId ?? "");
   }, [profile]);
 
   async function onSaveProfile(e: FormEvent) {
@@ -48,7 +50,11 @@ export default function ProfilePage() {
 
     setProfileLoading(true);
     try {
-      await updateProfile({ firstName: nextFirst, lastName: nextLast });
+      await updateProfile({
+        firstName: nextFirst,
+        lastName: nextLast,
+        upiId: upiId.trim(),
+      });
       await refreshProfile();
       setProfileOk("Profile updated");
     } catch (err) {
@@ -108,12 +114,17 @@ export default function ProfilePage() {
         className="border-2 border-ink bg-cream shadow-hard divide-y-2 divide-ink"
       >
         <Row label="Email" value={profile?.email ?? user?.email ?? "—"} />
+        <Row
+          label="UPI"
+          value={profile?.upiId?.trim() ? profile.upiId : "Not set"}
+          mono
+        />
         <Row label="User ID" value={String(user?.id ?? "—")} mono />
       </motion.div>
 
       <section className="space-y-3">
         <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
-          Edit name
+          Edit profile
         </p>
         <form
           onSubmit={onSaveProfile}
@@ -133,6 +144,13 @@ export default function ProfilePage() {
               onChange={(e) => setLastName(e.target.value)}
             />
           </div>
+          <Input
+            label="UPI ID"
+            value={upiId}
+            onChange={(e) => setUpiId(e.target.value)}
+            placeholder="you@oksbi"
+            hint="Optional — enables Pay UPI on settle-up. Leave blank to clear."
+          />
           {profileError ? (
             <p className="font-mono text-xs text-accent border-2 border-ink bg-canvas px-2 py-1.5">
               {profileError}
@@ -144,7 +162,7 @@ export default function ProfilePage() {
             </p>
           ) : null}
           <Button type="submit" loading={profileLoading}>
-            Save name
+            Save profile
           </Button>
         </form>
       </section>

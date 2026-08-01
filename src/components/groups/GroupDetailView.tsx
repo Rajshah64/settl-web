@@ -5,7 +5,10 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { AddMemberModal } from "@/components/groups/AddMemberModal";
+import { EditGroupModal } from "@/components/groups/EditGroupModal";
+import { InviteSharePanel } from "@/components/groups/InviteSharePanel";
 import { MemberList } from "@/components/groups/MemberList";
+import { TransferOwnershipModal } from "@/components/groups/TransferOwnershipModal";
 import { CreateExpenseModal } from "@/components/expenses/CreateExpenseModal";
 import { EditExpenseModal } from "@/components/expenses/EditExpenseModal";
 import { ExpenseList } from "@/components/expenses/ExpenseList";
@@ -14,7 +17,7 @@ import { Button } from "@/components/ui/Button";
 import { Tabs } from "@/components/ui/Tabs";
 import { ApiError } from "@/lib/api/client";
 import { listExpenses } from "@/lib/api/expenses";
-import { getGroup, leaveGroup, regenerateInviteCode } from "@/lib/api/groups";
+import { archiveGroup, getGroup, leaveGroup } from "@/lib/api/groups";
 import { listMembers } from "@/lib/api/members";
 import { useAuth } from "@/lib/auth/auth-context";
 import type { Expense, Group, GroupMember } from "@/lib/api/types";
@@ -39,9 +42,10 @@ export function GroupDetailView() {
   const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [addExpenseOpen, setAddExpenseOpen] = useState(false);
   const [editExpense, setEditExpense] = useState<Expense | null>(null);
-  const [inviteBusy, setInviteBusy] = useState(false);
+  const [editGroupOpen, setEditGroupOpen] = useState(false);
+  const [transferOpen, setTransferOpen] = useState(false);
   const [leaveBusy, setLeaveBusy] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [archiveBusy, setArchiveBusy] = useState(false);
 
   const load = useCallback(async () => {
     if (!Number.isFinite(groupId)) {
@@ -79,36 +83,7 @@ export function GroupDetailView() {
 
   const canManage =
     myMembership?.role === "OWNER" || myMembership?.role === "ADMIN";
-
-  async function copyInvite() {
-    if (!group) return;
-    try {
-      await navigator.clipboard.writeText(group.inviteCode);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // ignore
-    }
-  }
-
-  async function rotateInvite() {
-    if (!group) return;
-    setInviteBusy(true);
-    try {
-      const next = await regenerateInviteCode(groupId);
-      setGroup({
-        ...group,
-        inviteCode: next.inviteCode,
-        inviteCodeExpiresAt: next.inviteCodeExpiresAt,
-      });
-    } catch (err) {
-      setError(
-        err instanceof ApiError ? err.message : "Could not rotate invite",
-      );
-    } finally {
-      setInviteBusy(false);
-    }
-  }
+  const isOwner = myMembership?.role === "OWNER";
 
   async function handleLeave() {
     if (!confirm("Leave this group?")) return;
@@ -119,6 +94,24 @@ export function GroupDetailView() {
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not leave");
       setLeaveBusy(false);
+    }
+  }
+
+  async function handleArchive() {
+    if (
+      !confirm(
+        "Archive this group? Members lose access until you restore it from the dashboard.",
+      )
+    ) {
+      return;
+    }
+    setArchiveBusy(true);
+    try {
+      await archiveGroup(groupId);
+      router.replace("/groups");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not archive");
+      setArchiveBusy(false);
     }
   }
 
@@ -147,22 +140,52 @@ export function GroupDetailView() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-5">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <Link href="/groups">
           <Button variant="ghost" className="!px-0 border-0 !shadow-none">
             ← Groups
           </Button>
         </Link>
-        {myMembership && myMembership.role !== "OWNER" ? (
-          <Button
-            variant="secondary"
-            loading={leaveBusy}
-            onClick={() => void handleLeave()}
-            className="!text-xs !py-2"
-          >
-            Leave
-          </Button>
-        ) : null}
+        <div className="flex flex-wrap gap-2">
+          {canManage ? (
+            <Button
+              variant="secondary"
+              className="!text-xs !py-2"
+              onClick={() => setEditGroupOpen(true)}
+            >
+              Edit
+            </Button>
+          ) : null}
+          {isOwner ? (
+            <>
+              <Button
+                variant="secondary"
+                className="!text-xs !py-2"
+                onClick={() => setTransferOpen(true)}
+              >
+                Transfer
+              </Button>
+              <Button
+                variant="danger"
+                className="!text-xs !py-2"
+                loading={archiveBusy}
+                onClick={() => void handleArchive()}
+              >
+                Archive
+              </Button>
+            </>
+          ) : null}
+          {myMembership && myMembership.role !== "OWNER" ? (
+            <Button
+              variant="secondary"
+              loading={leaveBusy}
+              onClick={() => void handleLeave()}
+              className="!text-xs !py-2"
+            >
+              Leave
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       <motion.header
@@ -172,7 +195,7 @@ export function GroupDetailView() {
         className="border-2 border-ink bg-cream shadow-hard-lg"
       >
         <div className="border-b-2 border-ink bg-canvas px-4 sm:px-5 py-4 flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted mb-1">
               Group //{group.id}
               {myMembership ? ` · ${myMembership.role}` : ""}
@@ -187,35 +210,12 @@ export function GroupDetailView() {
             ) : null}
           </div>
 
-          <div className="border-2 border-ink bg-cream px-3 py-2 space-y-2 shrink-0">
-            <p className="font-mono text-[10px] uppercase text-muted">Invite</p>
-            <p className="font-mono text-xl font-bold tracking-[0.2em]">
-              {group.inviteCode}
-            </p>
-            <div className="flex gap-1">
-              <motion.button
-                type="button"
-                whileTap={{ scale: 0.96 }}
-                transition={snapSpring}
-                onClick={() => void copyInvite()}
-                className="border-2 border-ink bg-canvas px-2 py-1 font-mono text-[10px] uppercase hover:bg-accent hover:text-cream"
-              >
-                {copied ? "Copied" : "Copy"}
-              </motion.button>
-              {canManage ? (
-                <motion.button
-                  type="button"
-                  whileTap={{ scale: 0.96 }}
-                  transition={snapSpring}
-                  disabled={inviteBusy}
-                  onClick={() => void rotateInvite()}
-                  className="border-2 border-ink bg-canvas px-2 py-1 font-mono text-[10px] uppercase hover:bg-ink hover:text-cream disabled:opacity-50"
-                >
-                  {inviteBusy ? "…" : "Rotate"}
-                </motion.button>
-              ) : null}
-            </div>
-          </div>
+          <InviteSharePanel
+            group={group}
+            canManage={canManage}
+            onGroupChange={setGroup}
+            onError={setError}
+          />
         </div>
 
         {error ? (
@@ -331,6 +331,27 @@ export function GroupDetailView() {
             prev.map((e) => (e.id === updated.id ? updated : e)),
           );
           setBalancesKey((k) => k + 1);
+        }}
+      />
+
+      <EditGroupModal
+        open={editGroupOpen}
+        onClose={() => setEditGroupOpen(false)}
+        group={group}
+        onUpdated={(g) => {
+          setGroup(g);
+          if (g.members) setMembers(g.members);
+        }}
+      />
+
+      <TransferOwnershipModal
+        open={transferOpen}
+        onClose={() => setTransferOpen(false)}
+        groupId={groupId}
+        members={members}
+        currentUserId={user?.id ?? 0}
+        onTransferred={async () => {
+          await load();
         }}
       />
     </div>
