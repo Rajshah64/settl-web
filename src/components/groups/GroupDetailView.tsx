@@ -259,7 +259,11 @@ export function GroupDetailView() {
                 exit={{ opacity: 0, y: -6 }}
                 transition={snapSpring}
               >
-                <BalancesPanel groupId={groupId} refreshKey={balancesKey} />
+                <BalancesPanel
+                  groupId={groupId}
+                  refreshKey={balancesKey}
+                  canManage={canManage}
+                />
               </motion.div>
             ) : (
               <motion.div

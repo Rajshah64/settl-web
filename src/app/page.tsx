@@ -61,7 +61,7 @@ export default function LandingPage() {
 
       <footer className="border-t-2 border-ink bg-canvas px-4 sm:px-8 py-4 font-mono text-[10px] uppercase tracking-wider text-muted flex justify-between gap-4">
         <span>Settl © {new Date().getFullYear()}</span>
-        <span>Phase 2b // balances</span>
+        <span>Phase 3 // settle up</span>
       </footer>
     </div>
   );

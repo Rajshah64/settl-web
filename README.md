@@ -21,6 +21,8 @@ API (separate repo): `http://localhost:3000` — enable CORS for `:3001` (see se
 
 **Phase 2b** — Derived group balances + suggested settle-up (`GET /groups/:id/balances`)
 
+**Phase 3** — Record settlements (`POST/GET/DELETE /groups/:id/settlements`) + mark-as-paid on balances tab
+
 ## Stack
 
 - Next.js 16 (App Router) + React 19

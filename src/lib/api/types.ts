@@ -90,7 +90,19 @@ export interface SuggestedSettlement {
   amountPaise: number;
 }
 
+/** Suggested transfers remaining after expenses − recorded settlements. */
 export interface GroupBalances {
   balances: NetBalance[];
   settlements: SuggestedSettlement[];
+}
+
+export interface Settlement {
+  id: number;
+  amountPaise: string;
+  currency: string;
+  note: string | null;
+  createdAt: string;
+  fromUser: UserSummary;
+  toUser: UserSummary;
+  createdBy: UserSummary;
 }
