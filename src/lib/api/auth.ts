@@ -27,3 +27,13 @@ export function getMe() {
 export function getProfile() {
   return apiFetch<UserProfile>("/user/me");
 }
+
+export function changePassword(input: {
+  currentPassword: string;
+  newPassword: string;
+}) {
+  return apiFetch<{ message: string }>("/auth/change-password", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}

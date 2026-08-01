@@ -27,6 +27,23 @@ export function createExpense(
   });
 }
 
+export function updateExpense(
+  groupId: number,
+  expenseId: number,
+  input: {
+    description?: string;
+    amountPaise?: number;
+    paidByUserId?: number;
+    participantUserIds?: number[];
+    spentAt?: string;
+  },
+) {
+  return apiFetch<Expense>(`/groups/${groupId}/expenses/${expenseId}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
 export function deleteExpense(groupId: number, expenseId: number) {
   return apiFetch<void>(`/groups/${groupId}/expenses/${expenseId}`, {
     method: "DELETE",

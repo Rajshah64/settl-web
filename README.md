@@ -23,6 +23,8 @@ API (separate repo): `http://localhost:3000` — enable CORS for `:3001` (see se
 
 **Phase 3** — Record settlements (`POST/GET/DELETE /groups/:id/settlements`) + mark-as-paid on balances tab
 
+**Account / expenses** — Profile edit + change password; expense edit/delete on group detail
+
 ## Stack
 
 - Next.js 16 (App Router) + React 19

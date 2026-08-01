@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { AddMemberModal } from "@/components/groups/AddMemberModal";
 import { MemberList } from "@/components/groups/MemberList";
 import { CreateExpenseModal } from "@/components/expenses/CreateExpenseModal";
+import { EditExpenseModal } from "@/components/expenses/EditExpenseModal";
 import { ExpenseList } from "@/components/expenses/ExpenseList";
 import { BalancesPanel } from "@/components/balances/BalancesPanel";
 import { Button } from "@/components/ui/Button";
@@ -37,6 +38,7 @@ export function GroupDetailView() {
   const [error, setError] = useState<string | null>(null);
   const [addMemberOpen, setAddMemberOpen] = useState(false);
   const [addExpenseOpen, setAddExpenseOpen] = useState(false);
+  const [editExpense, setEditExpense] = useState<Expense | null>(null);
   const [inviteBusy, setInviteBusy] = useState(false);
   const [leaveBusy, setLeaveBusy] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -249,7 +251,18 @@ export function GroupDetailView() {
                     Add expense
                   </Button>
                 </div>
-                <ExpenseList expenses={expenses} />
+                <ExpenseList
+                  expenses={expenses}
+                  groupId={groupId}
+                  currentUserId={user?.id ?? 0}
+                  canManage={canManage}
+                  onEdit={setEditExpense}
+                  onDeleted={(id) => {
+                    setExpenses((prev) => prev.filter((e) => e.id !== id));
+                    setExpenseTotal((t) => Math.max(0, t - 1));
+                    setBalancesKey((k) => k + 1);
+                  }}
+                />
               </motion.div>
             ) : tab === "balances" ? (
               <motion.div
@@ -303,6 +316,20 @@ export function GroupDetailView() {
         onCreated={(expense) => {
           setExpenses((prev) => [expense, ...prev]);
           setExpenseTotal((t) => t + 1);
+          setBalancesKey((k) => k + 1);
+        }}
+      />
+
+      <EditExpenseModal
+        open={editExpense !== null}
+        onClose={() => setEditExpense(null)}
+        groupId={groupId}
+        members={members}
+        expense={editExpense}
+        onUpdated={(updated) => {
+          setExpenses((prev) =>
+            prev.map((e) => (e.id === updated.id ? updated : e)),
+          );
           setBalancesKey((k) => k + 1);
         }}
       />

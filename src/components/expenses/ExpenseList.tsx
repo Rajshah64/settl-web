@@ -1,6 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
+import { Button } from "@/components/ui/Button";
+import { ApiError } from "@/lib/api/client";
+import { deleteExpense } from "@/lib/api/expenses";
 import type { Expense } from "@/lib/api/types";
 import { displayName, formatINR } from "@/lib/format";
 import { staggerContainer, staggerItem } from "@/lib/motion";
@@ -19,9 +23,48 @@ function formatDate(iso: string) {
 
 interface ExpenseListProps {
   expenses: Expense[];
+  groupId: number;
+  currentUserId: number;
+  canManage: boolean;
+  onEdit: (expense: Expense) => void;
+  onDeleted: (expenseId: number) => void;
 }
 
-export function ExpenseList({ expenses }: ExpenseListProps) {
+export function ExpenseList({
+  expenses,
+  groupId,
+  currentUserId,
+  canManage,
+  onEdit,
+  onDeleted,
+}: ExpenseListProps) {
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  function canMutate(expense: Expense) {
+    return canManage || expense.paidBy.id === currentUserId;
+  }
+
+  async function handleDelete(expense: Expense) {
+    if (
+      !window.confirm(
+        `Delete “${expense.description}” (${formatINR(expense.amountPaise)})?`,
+      )
+    ) {
+      return;
+    }
+    setDeletingId(expense.id);
+    setError(null);
+    try {
+      await deleteExpense(groupId, expense.id);
+      onDeleted(expense.id);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Failed to delete expense");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   if (expenses.length === 0) {
     return (
       <div className="border-2 border-dashed border-ink bg-canvas p-8 sm:p-10 text-center space-y-2">
@@ -39,38 +82,70 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
   }
 
   return (
-    <motion.ul
-      variants={staggerContainer}
-      initial="hidden"
-      animate="show"
-      className="border-2 border-ink divide-y-2 divide-ink bg-cream shadow-hard"
-    >
-      <AnimatePresence mode="popLayout">
-        {expenses.map((expense, i) => (
-          <motion.li
-            key={expense.id}
-            variants={staggerItem}
-            layout
-            className="px-4 py-3 sm:px-5 sm:py-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4"
-          >
-            <div className="font-mono text-[10px] text-muted shrink-0 w-8">
-              {String(i + 1).padStart(2, "0")}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="font-bold uppercase tracking-tight truncate">
-                {expense.description}
-              </p>
-              <p className="font-mono text-[11px] text-muted mt-0.5">
-                Paid by {displayName(expense.paidBy)} · {formatDate(expense.spentAt)} ·{" "}
-                {expense.shares.length} split
-              </p>
-            </div>
-            <p className="font-mono text-base sm:text-lg font-bold tabular-nums shrink-0">
-              {formatINR(expense.amountPaise)}
-            </p>
-          </motion.li>
-        ))}
-      </AnimatePresence>
-    </motion.ul>
+    <div className="space-y-3">
+      {error ? (
+        <div className="border-2 border-accent bg-cream px-3 py-2 font-mono text-xs text-accent">
+          {error}
+        </div>
+      ) : null}
+      <motion.ul
+        variants={staggerContainer}
+        initial="hidden"
+        animate="show"
+        className="border-2 border-ink divide-y-2 divide-ink bg-cream shadow-hard"
+      >
+        <AnimatePresence mode="popLayout">
+          {expenses.map((expense, i) => {
+            const mutable = canMutate(expense);
+            return (
+              <motion.li
+                key={expense.id}
+                variants={staggerItem}
+                layout
+                className="px-4 py-3 sm:px-5 sm:py-4 flex flex-col gap-3"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                  <div className="font-mono text-[10px] text-muted shrink-0 w-8">
+                    {String(i + 1).padStart(2, "0")}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold uppercase tracking-tight truncate">
+                      {expense.description}
+                    </p>
+                    <p className="font-mono text-[11px] text-muted mt-0.5">
+                      Paid by {displayName(expense.paidBy)} ·{" "}
+                      {formatDate(expense.spentAt)} · {expense.shares.length}{" "}
+                      split
+                    </p>
+                  </div>
+                  <p className="font-mono text-base sm:text-lg font-bold tabular-nums shrink-0">
+                    {formatINR(expense.amountPaise)}
+                  </p>
+                </div>
+                {mutable ? (
+                  <div className="flex gap-2 sm:pl-8">
+                    <Button
+                      variant="secondary"
+                      className="text-xs py-2 px-3"
+                      onClick={() => onEdit(expense)}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="text-xs py-2 px-3"
+                      loading={deletingId === expense.id}
+                      onClick={() => void handleDelete(expense)}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                ) : null}
+              </motion.li>
+            );
+          })}
+        </AnimatePresence>
+      </motion.ul>
+    </div>
   );
 }
